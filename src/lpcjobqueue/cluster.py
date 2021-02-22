@@ -104,7 +104,26 @@ class LPCCondorJob(HTCondorJob):
             self.status = Status.running
 
     async def close(self):
-        logger.debug("Forcefully stopping worker: %s job: %s", self.name, self.job_id)
+        logger.debug("Closing worker: %s job: %s", self.name, self.job_id)
+        if self._cluster:
+            # workaround for https://github.com/dask/distributed/issues/4532
+            ret = await self._cluster().scheduler_comm.retire_workers(names=[self.name])
+            logger.debug(f"Worker retirement info: {ret}")
+
+        def check_gone():
+            return len(SCHEDD.query(f"ClusterId == {self.job_id}")) == 0
+
+        for _ in range(10):
+            await asyncio.sleep(1)
+            if await asyncio.get_event_loop().run_in_executor(None, check_gone):
+                self.known_jobs.remove(self.job_id)
+                return
+
+        logger.debug(
+            "Reached timeout, forcefully stopping worker: %s job: %s",
+            self.name,
+            self.job_id,
+        )
 
         def stop():
             return SCHEDD.act(htcondor.JobAction.Remove, f"ClusterId == {self.job_id}")
