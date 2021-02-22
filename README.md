@@ -6,7 +6,8 @@ A dask-jobqueue plugin for the LPC Condor queue designed to work with the `coffe
 # Installation
 From the working directory of your coffea project, download and run the boostrap script:
 ```bash
-...
+curl -OL https://raw.githubusercontent.com/CoffeaTeam/lpcjobqueue/main/bootstrap.sh
+bash bootstrap.sh
 ```
 The `./shell` executable can then be used to start a singularity shell.
 
