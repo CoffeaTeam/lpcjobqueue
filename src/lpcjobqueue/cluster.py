@@ -2,6 +2,7 @@ import os
 import logging
 import asyncio
 import weakref
+import random
 import socket
 import sys
 import yaml
@@ -153,10 +154,15 @@ class LPCCondorCluster(HTCondorCluster):
 
     def __init__(self, **kwargs):
         hostname = socket.gethostname()
-        port = 10000
+        port = random.randint(10000, 10100)
         scheduler_options = {"host": f"{hostname}:{port}"}
         if "scheduler_options" in kwargs:
-            kwargs["scheduler_options"].update(scheduler_options)
+            kwargs["scheduler_options"].setdefault(scheduler_options)
         else:
             kwargs["scheduler_options"] = scheduler_options
-        super().__init__(**kwargs)
+        try:
+            super().__init__(**kwargs)
+        except OSError as ex:
+            raise RuntimeError(
+                f"Likely failed to bind to local port {port}, try rerunning"
+            )
