@@ -1,0 +1,23 @@
+jobqueue:
+  lpccondor:
+    name: dask-worker
+
+    # Dask worker options
+    cores: 2                 # Total number of cores per job
+    memory: 4GB                # Total amount of memory per job
+    processes: 1                # Number of Python processes per job
+
+    interface: null             # Network interface to use like eth0 or ib0
+    death-timeout: 60           # Number of seconds to wait if a worker can not find a scheduler
+    local-directory: /srv       # Location of fast local storage like /scratch or $TMPDIR
+    extra: ["--worker-port 10002:10100"]
+
+    # HTCondor Resource Manager options
+    disk: 4GB                  # Total amount of disk per job
+    env-extra: []
+    job-extra: {}               # Extra submit attributes
+    log-directory: null
+    shebang: "#!/usr/bin/env condor_submit" # doesn't matter
+    
+    # Scheduler options
+    scheduler-options: {}
