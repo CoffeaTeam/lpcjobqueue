@@ -26,3 +26,14 @@ cluster.scale(10)
 client = Client(cluster)
 # run_uproot_job(...)
 ```
+
+There is a self-contained simple example in `simple_example.py`, you can run it on an LPC login node by doing:
+```bash
+./shell
+python -i simple_example.py
+# wait for it to run and finish
+import coffea
+coffea.util.save(hists, 'simple_hists.coffea') # plot and such elsewhere / at your leisure
+exit()
+exit
+```
