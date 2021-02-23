@@ -35,10 +35,12 @@ def is_venv():
 
 class LPCCondorJob(HTCondorJob):
     executable = "/usr/bin/env"
+    container_prefix = "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/"
     config_name = "lpccondor"
     known_jobs = set()
 
-    def __init__(self, scheduler=None, name=None, **base_class_kwargs):
+    def __init__(self, scheduler=None, name=None, *, image="coffeateam/coffea-dask:latest", **base_class_kwargs):
+        image = self.container_prefix + image
         base_class_kwargs["python"] = "python"
         super().__init__(scheduler=scheduler, name=name, **base_class_kwargs)
         homedir = os.path.expanduser("~")
@@ -55,7 +57,8 @@ class LPCCondorJob(HTCondorJob):
                 "initialdir": homedir,
                 "use_x509userproxy": "true",
                 "when_to_transfer_output": "ON_EXIT_OR_EVICT",
-                "+SingularityImage": '"/cvmfs/unpacked.cern.ch/registry.hub.docker.com/coffeateam/coffea-dask:latest"',
+                "transfer_output_files": "",
+                "+SingularityImage": f'"{image}"',
             }
         )
 
