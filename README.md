@@ -30,6 +30,7 @@ client = Client(cluster)
 There is a self-contained simple example in `simple_example.py`, you can run it on an LPC login node by doing:
 ```bash
 ./shell
+curl -OL https://raw.githubusercontent.com/CoffeaTeam/lpcjobqueue/main/simple_example.py
 python -i simple_example.py
 # wait for it to run and finish
 import coffea
