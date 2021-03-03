@@ -113,7 +113,10 @@ class LPCCondorJob(HTCondorJob):
             self.status = Status.running
 
     async def close(self):
+        if self.status == Status.closing:
+            return await self.finished()
         logger.info(f"Closing worker {self.name} job_id {self.job_id} (current status: {self.status})")
+        self.status = Status.closing
         if self._cluster:
             # workaround for https://github.com/dask/distributed/issues/4532
             ret = await self._cluster().scheduler_comm.retire_workers(names=[self.name], remove=True, close_workers=True)
@@ -152,6 +155,8 @@ class LPCCondorJob(HTCondorJob):
             self._event_finished.set()
             return
         logger.error(f"Failed to forcefully close job {self.job_id}")
+        self.status = Status.error
+        self._event_finished.set()
 
     @classmethod
     def _close_job(cls, job_id):
