@@ -39,7 +39,14 @@ class LPCCondorJob(HTCondorJob):
     config_name = "lpccondor"
     known_jobs = set()
 
-    def __init__(self, scheduler=None, name=None, *, image="coffeateam/coffea-dask:latest", **base_class_kwargs):
+    def __init__(
+        self,
+        scheduler=None,
+        name=None,
+        *,
+        image="coffeateam/coffea-dask:latest",
+        **base_class_kwargs,
+    ):
         image = self.container_prefix + image
         base_class_kwargs["python"] = "python"
         super().__init__(scheduler=scheduler, name=name, **base_class_kwargs)
@@ -120,7 +127,7 @@ class LPCCondorJob(HTCondorJob):
         for _ in range(10):
             await asyncio.sleep(1)
             if await asyncio.get_event_loop().run_in_executor(None, check_gone):
-                self.known_jobs.remove(self.job_id)
+                self.known_jobs.discard(self.job_id)
                 return
 
         logger.debug(
@@ -134,7 +141,7 @@ class LPCCondorJob(HTCondorJob):
 
         result = await asyncio.get_event_loop().run_in_executor(None, stop)
         logger.debug(f"Closed job {self.job_id}, result {result}")
-        self.known_jobs.remove(self.job_id)
+        self.known_jobs.discard(self.job_id)
 
     @classmethod
     def _close_job(cls, job_id):
@@ -142,7 +149,7 @@ class LPCCondorJob(HTCondorJob):
             logger.info(f"Closeing job {job_id} in a finalizer")
             result = SCHEDD.act(htcondor.JobAction.Remove, f"ClusterId == {job_id}")
             logger.debug(f"Closed job {job_id}, result {result}")
-            cls.known_jobs.remove(job_id)
+            cls.known_jobs.discard(job_id)
 
 
 class LPCCondorCluster(HTCondorCluster):
@@ -165,7 +172,7 @@ class LPCCondorCluster(HTCondorCluster):
             kwargs["scheduler_options"] = scheduler_options
         try:
             super().__init__(**kwargs)
-        except OSError as ex:
+        except OSError:
             raise RuntimeError(
                 f"Likely failed to bind to local port {port}, try rerunning"
             )
