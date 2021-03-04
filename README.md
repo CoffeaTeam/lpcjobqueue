@@ -24,9 +24,10 @@ The package assumes your proxy is located in your home directory (as is usual fo
 From the shell, the python environment has access to the `lpcjobqueue` package, and in particular,
 the `LPCCondorCluster` class. See the class docstring for details on its many arguments.
 
+## With dask
 An example of spinning up an adaptive cluster and executing some work remotely:
 ```python
-from dask.distributed import Client
+from distributed import Client
 from lpcjobqueue import LPCCondorCluster
 
 
@@ -37,7 +38,9 @@ client = Client(cluster)
 for future in client.map(lambda x: x * 5, range(10)):
     print(future.result())
 ```
+More basic examples of dask client usage can be found [here](https://distributed.dask.org/en/latest/client.html)
 
+## With Coffea
 The coffea `processor.run_uproot_job` function can accept the dask `client` instance.
 There is a self-contained simple example of running a coffea job in `simple_example.py`,
 you can run it on an LPC login node by doing:
@@ -52,7 +55,8 @@ exit()
 exit
 ```
 
-The dask distributed cluster comes with a [dashboard]()
+## Dashboard
+The dask distributed cluster comes with a [dashboard](https://docs.dask.org/en/latest/diagnostics-distributed.html)
 to monitor progress of jobs and some performance metrics. By default it starts on port `8787`
 so if you have that port forwarded from your machine to the LPC interactive node it should
 be accessible. If the dashboard port is already used on your node, you can override the default

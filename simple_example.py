@@ -1,5 +1,5 @@
 import time
-from dask.distributed import Client
+from distributed import Client
 from lpcjobqueue import LPCCondorCluster
 from coffea import hist, processor, nanoevents
 import awkward as ak
