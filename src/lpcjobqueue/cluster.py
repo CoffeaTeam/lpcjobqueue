@@ -3,8 +3,10 @@ import logging
 import asyncio
 import weakref
 import random
+import shutil
 import socket
 import sys
+import tempfile
 import yaml
 import dask
 from distributed.core import Status
@@ -44,22 +46,27 @@ class LPCCondorJob(HTCondorJob):
         scheduler=None,
         name=None,
         *,
-        image="coffeateam/coffea-dask:latest",
+        ship_env,
+        image,
         **base_class_kwargs,
     ):
         image = self.container_prefix + image
-        base_class_kwargs["python"] = "python"
+        if ship_env:
+            base_class_kwargs["python"] = ".env/bin/python"
+        else:
+            base_class_kwargs["python"] = "python"
         super().__init__(scheduler=scheduler, name=name, **base_class_kwargs)
-        homedir = os.path.expanduser("~")
         if self.log_directory:
-            if not self.log_directory.startswith(homedir):
+            if not any(
+                os.path.commonprefix([self.log_directory, p]) == p
+                for p in LPCCondorCluster.schedd_safe_paths
+            ):
                 raise ValueError(
-                    f"log_directory must be a subpath of {homedir} or else the schedd cannot write our logs back to the container"
+                    f"log_directory must be a subpath of one of {LPCCondorCluster.schedd_safe_paths} or else the schedd cannot write our logs back to the container"
                 )
 
         self.job_header_dict.update(
             {
-                "initialdir": homedir,
                 "use_x509userproxy": "true",
                 "when_to_transfer_output": "ON_EXIT_OR_EVICT",
                 "transfer_output_files": "",
@@ -86,7 +93,11 @@ class LPCCondorJob(HTCondorJob):
         """ Start workers and point them to our local scheduler """
         logger.info("Starting worker: %s", self.name)
 
+        if "initialdir" not in self.job_header_dict:
+            raise RuntimeError("Attempting to start a job before files are prepared")
+
         job = self.job_script()
+        logger.debug(job)
         job = htcondor.Submit(job)
 
         def sub():
@@ -115,11 +126,15 @@ class LPCCondorJob(HTCondorJob):
     async def close(self):
         if self.status == Status.closing:
             return await self.finished()
-        logger.info(f"Closing worker {self.name} job_id {self.job_id} (current status: {self.status})")
+        logger.info(
+            f"Closing worker {self.name} job_id {self.job_id} (current status: {self.status})"
+        )
         self.status = Status.closing
         if self._cluster:
             # workaround for https://github.com/dask/distributed/issues/4532
-            ret = await self._cluster().scheduler_comm.retire_workers(names=[self.name], remove=True, close_workers=True)
+            ret = await self._cluster().scheduler_comm.retire_workers(
+                names=[self.name], remove=True, close_workers=True
+            )
             # adaptive cluster scaling seems to call this properly already, so may be a no-op
             logger.debug(f"Worker {self.name} retirement info: {ret}")
 
@@ -161,7 +176,9 @@ class LPCCondorJob(HTCondorJob):
     @classmethod
     def _close_job(cls, job_id):
         if job_id in cls.known_jobs:
-            logger.warning(f"Last-ditch attempt to close HTCondor job {job_id} in finalizer! You should confirm the job exits!")
+            logger.warning(
+                f"Last-ditch attempt to close HTCondor job {job_id} in finalizer! You should confirm the job exits!"
+            )
             SCHEDD.act(htcondor.JobAction.Remove, f"ClusterId == {job_id}")
             cls.known_jobs.discard(job_id)
 
@@ -170,23 +187,86 @@ class LPCCondorCluster(HTCondorCluster):
     __doc__ = (
         HTCondorCluster.__doc__
         + """
-        More LPC-specific info...
+
+    Additional LPC parameters:
+    ship_env: bool
+        If true (default), ship the ``/srv/.env`` virtualenv with the job and run workers
+        from that environent. This allows user-installed packages to be available on the worker
+    image: str
+        Name of the singularity image to use (default: ``coffeateam/coffea-dask:latest``)
+    transfer_input_files: str, List[str]
+        Files to be shipped along with the job. They will be placed in the working directory
+        of the workers, as usual for HTCondor. Any paths not accessible from the LPC schedds
+        (because of restrictions placed on remote job submission) will be copied to a temporary
+        directory under ``/uscmst1b_scratch/lpc1/3DayLifetime/$USER``.
     """
     )
     job_cls = LPCCondorJob
     config_name = "lpccondor"
+    schedd_safe_paths = [
+        os.path.expanduser("~"),
+        "/uscmst1b_scratch/lpc1/3DayLifetime",
+        "/uscms_data",
+    ]
 
     def __init__(self, **kwargs):
         hostname = socket.gethostname()
-        port = random.randint(10000, 10100)
-        scheduler_options = {"host": f"{hostname}:{port}"}
+        self._port = random.randint(10000, 10100)
+        scheduler_options = {"host": f"{hostname}:{self._port}"}
         if "scheduler_options" in kwargs:
             kwargs["scheduler_options"].setdefault(scheduler_options)
         else:
             kwargs["scheduler_options"] = scheduler_options
+        kwargs.setdefault("ship_env", True)
+        kwargs.setdefault("image", "coffeateam/coffea-dask:latest")
+        self._ship_env = kwargs["ship_env"]
+        infiles = kwargs.pop("transfer_input_files", [])
+        if not isinstance(infiles, list):
+            infiles = [infiles]
+        self._transfer_input_files = infiles
+        super().__init__(**kwargs)
+
+    async def _start(self):
         try:
-            super().__init__(**kwargs)
+            await super()._start()
         except OSError:
             raise RuntimeError(
-                f"Likely failed to bind to local port {port}, try rerunning"
+                f"Likely failed to bind to local port {self._port}, try rerunning"
             )
+
+        def build_scratch():
+            # Depending on the size of the inputs this may take a long time
+            tmproot = f"/uscmst1b_scratch/lpc1/3DayLifetime/{os.getlogin()}/"
+            self.scratch_area = tempfile.TemporaryDirectory(dir=tmproot)
+            infiles = []
+            if self._ship_env:
+                shutil.copytree(
+                    "/srv/.env", os.path.join(self.scratch_area.name, ".env")
+                )
+                infiles.append(".env")
+            for fn in self._transfer_input_files:
+                fn = os.path.abspath(fn)
+                if any(
+                    os.path.commonprefix([fn, p]) == p for p in self.schedd_safe_paths
+                ):
+                    # no need to copy these
+                    infiles.append(fn)
+                    continue
+                basename = os.path.basename(fn)
+                try:
+                    shutil.copy(fn, self.scratch_area.name)
+                except IsADirectoryError:
+                    shutil.copytree(fn, os.path.join(self.scratch_area.name, basename))
+                infiles.append(basename)
+            return infiles
+
+        prepared_input_files = await self.loop.run_in_executor(None, build_scratch)
+        self._job_kwargs.setdefault("job_extra", {})
+        self._job_kwargs["job_extra"]["initialdir"] = self.scratch_area.name
+        self._job_kwargs["job_extra"]["transfer_input_files"] = ",".join(
+            prepared_input_files
+        )
+
+    async def _close(self):
+        await super()._close()
+        await self.loop.run_in_executor(None, lambda: self.scratch_area.cleanup())

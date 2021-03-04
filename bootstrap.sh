@@ -3,7 +3,7 @@
 cat <<EOF > shell
 #!/usr/bin/env bash
 
-singularity exec -B \${PWD}:/srv --pwd /srv \\
+singularity exec -B \${PWD}:/srv -B /uscmst1b_scratch --pwd /srv \\
   /cvmfs/unpacked.cern.ch/registry.hub.docker.com/coffeateam/coffea-dask:latest \\
   /bin/bash --rcfile /srv/.bashrc
 EOF
