@@ -51,16 +51,6 @@ if __name__ == "__main__":
     cluster.adapt(minimum=1, maximum=10)
     client = Client(cluster)
 
-    fileset = {
-        "DoubleMuon": [
-            "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012B_DoubleMuParked.root",
-            "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleMuParked.root",
-        ],
-        "ZZ to 4mu": [
-            "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/ZZTo4mu.root"
-        ],
-    }
-
     exe_args = {
         "client": client,
         "savemetrics": True,
@@ -73,7 +63,7 @@ if __name__ == "__main__":
     print("Waiting for at least one worker...")
     client.wait_for_workers(1)
     hists, metrics = processor.run_uproot_job(
-        fileset,
+        "fileset.json",
         treename="Events",
         processor_instance=proc,
         executor=processor.dask_executor,

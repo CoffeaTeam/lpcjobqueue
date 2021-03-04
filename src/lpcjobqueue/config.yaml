@@ -13,7 +13,7 @@ jobqueue:
     extra: ["--worker-port 10000:10070", "--nanny-port 10070:10100", "--no-dashboard"]
 
     # HTCondor Resource Manager options
-    disk: 4GB                  # Total amount of disk per job
+    disk: 200MB                  # Total amount of disk per job
     env-extra: []
     job-extra: {}               # Extra submit attributes
     log-directory: null
