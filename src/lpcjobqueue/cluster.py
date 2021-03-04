@@ -118,7 +118,7 @@ class LPCCondorJob(HTCondorJob):
             self.known_jobs.add(self.job_id)
             weakref.finalize(self, self._close_job, self.job_id)
 
-            logger.info("Starting job: %s", self.job_id)
+            logger.info(f"Starting job: {self.job_id} for worker {self.name}")
             # dask_jobqueue Job class does some things we don't want
             # so we do what is done in distributed.ProcessInterface
             self.status = Status.running
@@ -144,16 +144,14 @@ class LPCCondorJob(HTCondorJob):
         for _ in range(30):
             await asyncio.sleep(1)
             if await asyncio.get_event_loop().run_in_executor(None, check_gone):
-                logger.info(f"Gracefully closed job {self.job_id}")
+                logger.info(f"Gracefully closed worker {self.name} job {self.job_id}")
                 self.known_jobs.discard(self.job_id)
                 self.status = Status.closed
                 self._event_finished.set()
                 return
 
         logger.info(
-            "Reached timeout, forcefully stopping worker: %s job: %s",
-            self.name,
-            self.job_id,
+            f"Reached timeout, forcefully stopping worker: {self.name} job: {self.job_id}"
         )
 
         def stop():
@@ -190,15 +188,17 @@ class LPCCondorCluster(HTCondorCluster):
 
     Additional LPC parameters:
     ship_env: bool
-        If true (default), ship the ``/srv/.env`` virtualenv with the job and run workers
-        from that environent. This allows user-installed packages to be available on the worker
+        If true (default), ship the ``/srv/.env`` virtualenv with the job and
+        run workers from that environent. This allows user-installed packages
+        to be available on the worker
     image: str
-        Name of the singularity image to use (default: ``coffeateam/coffea-dask:latest``)
+        Name of the singularity image to use (default: $COFFEA_IMAGE)
     transfer_input_files: str, List[str]
-        Files to be shipped along with the job. They will be placed in the working directory
-        of the workers, as usual for HTCondor. Any paths not accessible from the LPC schedds
-        (because of restrictions placed on remote job submission) will be copied to a temporary
-        directory under ``/uscmst1b_scratch/lpc1/3DayLifetime/$USER``.
+        Files to be shipped along with the job. They will be placed in the
+        working directory of the workers, as usual for HTCondor. Any paths
+        not accessible from the LPC schedds (because of restrictions placed
+        on remote job submission) will be copied to a temporary directory
+        under ``/uscmst1b_scratch/lpc1/3DayLifetime/$USER``.
     """
     )
     job_cls = LPCCondorJob
@@ -218,7 +218,9 @@ class LPCCondorCluster(HTCondorCluster):
         else:
             kwargs["scheduler_options"] = scheduler_options
         kwargs.setdefault("ship_env", True)
-        kwargs.setdefault("image", "coffeateam/coffea-dask:latest")
+        kwargs.setdefault(
+            "image", os.environ.get("COFFEA_IMAGE", "coffeateam/coffea-dask:latest")
+        )
         self._ship_env = kwargs["ship_env"]
         infiles = kwargs.pop("transfer_input_files", [])
         if not isinstance(infiles, list):

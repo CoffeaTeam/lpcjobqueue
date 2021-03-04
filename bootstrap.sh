@@ -3,8 +3,15 @@
 cat <<EOF > shell
 #!/usr/bin/env bash
 
+
+if [ "$1" != "" ]; then
+  export COFFEA_IMAGE=coffeateam/coffea-dask:latest
+else
+  export COFFEA_IMAGE=$1
+fi
+
 singularity exec -B \${PWD}:/srv -B /uscmst1b_scratch --pwd /srv \\
-  /cvmfs/unpacked.cern.ch/registry.hub.docker.com/coffeateam/coffea-dask:latest \\
+  /cvmfs/unpacked.cern.ch/registry.hub.docker.com/${COFFEA_IMAGE} \\
   /bin/bash --rcfile /srv/.bashrc
 EOF
 
@@ -12,8 +19,9 @@ cat <<EOF > .bashrc
 install_env() {
   set -e
   echo "Installing shallow virtual environment in \$PWD/.env..."
-  python -m venv --system-site-packages .env
-  .env/bin/pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git
+  python -m venv --system-site-packages --copies .env
+  unlink .env/lib64  # HTCondor can't transfer symlink to directory and it appears optional
+  .env/bin/pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v0.2.0
   echo "done."
 }
 
@@ -27,4 +35,4 @@ export IPYTHONDIR=/srv/.ipython
 EOF
 
 chmod u+x shell .bashrc
-echo "Wrote shell and .bashrc to current directory. Run ./shell to start the singularity shell"
+echo "Wrote shell and .bashrc to current directory. You can delete this file. Run ./shell to start the singularity shell"
