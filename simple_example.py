@@ -47,7 +47,8 @@ class MyProcessor(processor.ProcessorABC):
 if __name__ == "__main__":
     tic = time.time()
     cluster = LPCCondorCluster()
-    cluster.adapt(minimum=0, maximum=10)
+    # minimum > 0: https://github.com/CoffeaTeam/coffea/issues/465
+    cluster.adapt(minimum=1, maximum=10)
     client = Client(cluster)
 
     fileset = {
@@ -69,6 +70,8 @@ if __name__ == "__main__":
 
     proc = MyProcessor()
 
+    print("Waiting for at least one worker...")
+    client.wait_for_workers(1)
     hists, metrics = processor.run_uproot_job(
         fileset,
         treename="Events",
@@ -80,5 +83,5 @@ if __name__ == "__main__":
     elapsed = time.time() - tic
     print(f"Output: {hists}")
     print(f"Metrics: {metrics}")
-    print(f"Finished in {elapsed}s")
-    print(f"Events/s: {metrics['entries'].value / elapsed}s")
+    print(f"Finished in {elapsed:.1f}s")
+    print(f"Events/s: {metrics['entries'].value / elapsed:.0f}")
