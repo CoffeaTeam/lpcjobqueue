@@ -4,7 +4,7 @@ cat <<EOF > shell
 #!/usr/bin/env bash
 
 
-if [ "\$1" != "" ]; then
+if [ "\$1" == "" ]; then
   export COFFEA_IMAGE=coffeateam/coffea-dask:latest
 else
   export COFFEA_IMAGE=\$1
