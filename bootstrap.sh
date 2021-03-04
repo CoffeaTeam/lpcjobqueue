@@ -27,6 +27,7 @@ install_env() {
 
 [[ -d .env ]] || install_env
 source .env/bin/activate
+alias pip="python -m pip"
 
 export JUPYTER_PATH=/srv/.jupyter
 export JUPYTER_RUNTIME_DIR=/srv/.local/share/jupyter/runtime

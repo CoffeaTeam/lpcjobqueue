@@ -212,11 +212,8 @@ class LPCCondorCluster(HTCondorCluster):
     def __init__(self, **kwargs):
         hostname = socket.gethostname()
         self._port = random.randint(10000, 10100)
-        scheduler_options = {"host": f"{hostname}:{self._port}"}
-        if "scheduler_options" in kwargs:
-            kwargs["scheduler_options"].setdefault(scheduler_options)
-        else:
-            kwargs["scheduler_options"] = scheduler_options
+        kwargs.setdefault("scheduler_options", {})
+        kwargs["scheduler_options"].setdefault("host", f"{hostname}:{self._port}")
         kwargs.setdefault("ship_env", False)
         kwargs.setdefault(
             "image", os.environ.get("COFFEA_IMAGE", "coffeateam/coffea-dask:latest")
