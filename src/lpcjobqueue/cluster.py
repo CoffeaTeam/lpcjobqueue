@@ -188,7 +188,7 @@ class LPCCondorCluster(HTCondorCluster):
 
     Additional LPC parameters:
     ship_env: bool
-        If true (default), ship the ``/srv/.env`` virtualenv with the job and
+        If True (default False), ship the ``/srv/.env`` virtualenv with the job and
         run workers from that environent. This allows user-installed packages
         to be available on the worker
     image: str
@@ -217,7 +217,7 @@ class LPCCondorCluster(HTCondorCluster):
             kwargs["scheduler_options"].setdefault(scheduler_options)
         else:
             kwargs["scheduler_options"] = scheduler_options
-        kwargs.setdefault("ship_env", True)
+        kwargs.setdefault("ship_env", False)
         kwargs.setdefault(
             "image", os.environ.get("COFFEA_IMAGE", "coffeateam/coffea-dask:latest")
         )

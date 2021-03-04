@@ -19,9 +19,9 @@ cat <<EOF > .bashrc
 install_env() {
   set -e
   echo "Installing shallow virtual environment in \$PWD/.env..."
-  python -m venv --system-site-packages --copies .env
+  python -m venv --without-pip --system-site-packages .env
   unlink .env/lib64  # HTCondor can't transfer symlink to directory and it appears optional
-  .env/bin/pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v0.2.0
+  .env/bin/python -m pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v0.2.0
   echo "done."
 }
 
