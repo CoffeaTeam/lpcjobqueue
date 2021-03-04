@@ -68,6 +68,8 @@ if __name__ == "__main__":
         processor_instance=proc,
         executor=processor.dask_executor,
         executor_args=exe_args,
+        # remove this to run on the whole fileset:
+        maxchunks=10,
     )
 
     elapsed = time.time() - tic

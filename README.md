@@ -47,6 +47,7 @@ you can run it on an LPC login node by doing:
 ```bash
 ./shell
 wget https://raw.githubusercontent.com/CoffeaTeam/lpcjobqueue/main/simple_example.py
+wget https://raw.githubusercontent.com/CoffeaTeam/lpcjobqueue/main/fileset.json
 python -i simple_example.py
 # wait for it to run and finish
 import coffea
