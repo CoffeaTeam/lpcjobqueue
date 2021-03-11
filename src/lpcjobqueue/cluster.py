@@ -168,7 +168,7 @@ class LPCCondorJob(HTCondorJob):
             self._event_finished.set()
             return
         logger.error(f"Failed to forcefully close job {self.job_id}")
-        self.status = Status.error
+        self.status = None
         self._event_finished.set()
 
     @classmethod
