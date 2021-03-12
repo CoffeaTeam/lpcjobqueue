@@ -17,6 +17,7 @@ from dask_jobqueue.htcondor import (
     quote_environment,
 )
 from .schedd import htcondor, SCHEDD
+import lpcjobqueue.patch  # noqa: F401
 
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,8 @@ class LPCCondorJob(HTCondorJob):
         image = self.container_prefix + image
         if ship_env:
             base_class_kwargs["python"] = ".env/bin/python"
+            base_class_kwargs.setdefault("extra", list(dask.config.get("jobqueue.%s.extra" % self.config_name)))
+            base_class_kwargs["extra"].extend(["--preload", "lpcjobqueue.patch"])
         else:
             base_class_kwargs["python"] = "python"
         super().__init__(scheduler=scheduler, name=name, **base_class_kwargs)
@@ -110,6 +113,9 @@ class LPCCondorJob(HTCondorJob):
                 SCHEDD.spool(classads)
                 return cluster_id
             except htcondor.HTCondorInternalError as ex:
+                logger.error(str(ex))
+                return None
+            except htcondor.HTCondorIOError as ex:
                 logger.error(str(ex))
                 return None
 
