@@ -22,7 +22,21 @@ as the shell environment. Be sure your x509 grid proxy certificate is up to date
 The package assumes your proxy is located in your home directory (as is usual for LPC interactive nodes)
 
 From the shell, the python environment has access to the `lpcjobqueue` package, and in particular,
-the `LPCCondorCluster` class. See the class docstring for details on its many arguments.
+the `LPCCondorCluster` class. This class inherits from [HTCondorCluster](https://jobqueue.dask.org/en/latest/generated/dask_jobqueue.HTCondorCluster.html)
+and provides the following additional options:
+
+    ship_env: bool
+        If True (default False), ship the ``/srv/.env`` virtualenv with the job and
+        run workers from that environent. This allows user-installed packages
+        to be available on the worker
+    image: str
+        Name of the singularity image to use (default: $COFFEA_IMAGE)
+    transfer_input_files: str, List[str]
+        Files to be shipped along with the job. They will be placed in the
+        working directory of the workers, as usual for HTCondor. Any paths
+        not accessible from the LPC schedds (because of restrictions placed
+        on remote job submission) will be copied to a temporary directory
+        under ``/uscmst1b_scratch/lpc1/3DayLifetime/$USER``.
 
 ## With dask
 An example of spinning up an adaptive cluster and executing some work remotely:
