@@ -147,7 +147,11 @@ class LPCCondorJob(HTCondorJob):
             logger.debug(f"Worker {self.name} retirement info: {ret}")
 
         def check_gone():
-            return len(SCHEDD.query(f"ClusterId == {self.job_id}")) == 0
+            try:
+                return len(SCHEDD.query(f"ClusterId == {self.job_id}")) == 0
+            except htcondor.HTCondorIOError as ex:
+                logger.error(str(ex))
+                return False
 
         for _ in range(30):
             await asyncio.sleep(1)
@@ -163,9 +167,14 @@ class LPCCondorJob(HTCondorJob):
         )
 
         def stop():
-            res = SCHEDD.act(htcondor.JobAction.Remove, f"ClusterId == {self.job_id}")
-            if res["TotalSuccess"] == 1 and res["TotalChangedAds"] == 1:
-                return True
+            try:
+                res = SCHEDD.act(
+                    htcondor.JobAction.Remove, f"ClusterId == {self.job_id}"
+                )
+                if res["TotalSuccess"] == 1 and res["TotalChangedAds"] == 1:
+                    return True
+            except htcondor.HTCondorIOError as ex:
+                logger.error(str(ex))
             return False
 
         result = await asyncio.get_event_loop().run_in_executor(None, stop)
@@ -185,7 +194,10 @@ class LPCCondorJob(HTCondorJob):
             logger.warning(
                 f"Last-ditch attempt to close HTCondor job {job_id} in finalizer! You should confirm the job exits!"
             )
-            SCHEDD.act(htcondor.JobAction.Remove, f"ClusterId == {job_id}")
+            try:
+                SCHEDD.act(htcondor.JobAction.Remove, f"ClusterId == {job_id}")
+            except htcondor.HTCondorIOError as ex:
+                logger.error(str(ex))
             cls.known_jobs.discard(job_id)
 
 
