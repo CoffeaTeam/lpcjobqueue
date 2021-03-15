@@ -54,7 +54,9 @@ class LPCCondorJob(HTCondorJob):
         image = self.container_prefix + image
         if ship_env:
             base_class_kwargs["python"] = ".env/bin/python"
-            base_class_kwargs.setdefault("extra", list(dask.config.get("jobqueue.%s.extra" % self.config_name)))
+            base_class_kwargs.setdefault(
+                "extra", list(dask.config.get("jobqueue.%s.extra" % self.config_name))
+            )
             base_class_kwargs["extra"].extend(["--preload", "lpcjobqueue.patch"])
         else:
             base_class_kwargs["python"] = "python"
@@ -229,7 +231,35 @@ class LPCCondorCluster(HTCondorCluster):
         if not isinstance(infiles, list):
             infiles = [infiles]
         self._transfer_input_files = infiles
+        self.scratch_area = None
         super().__init__(**kwargs)
+
+    def _build_scratch(self):
+        # Depending on the size of the inputs this may take a long time
+        tmproot = f"/uscmst1b_scratch/lpc1/3DayLifetime/{os.getlogin()}/"
+        os.makedirs(tmproot, exist_ok=True)
+        self.scratch_area = tempfile.TemporaryDirectory(dir=tmproot)
+        infiles = []
+        if self._ship_env:
+            shutil.copytree("/srv/.env", os.path.join(self.scratch_area.name, ".env"))
+            infiles.append(".env")
+        for fn in self._transfer_input_files:
+            fn = os.path.abspath(fn)
+            if any(os.path.commonprefix([fn, p]) == p for p in self.schedd_safe_paths):
+                # no need to copy these
+                infiles.append(fn)
+                continue
+            basename = os.path.basename(fn)
+            try:
+                shutil.copy(fn, self.scratch_area.name)
+            except IsADirectoryError:
+                shutil.copytree(fn, os.path.join(self.scratch_area.name, basename))
+            infiles.append(basename)
+        return infiles
+
+    def _clean_scratch(self):
+        if self.scratch_area is not None:
+            self.scratch_area.cleanup()
 
     async def _start(self):
         try:
@@ -239,33 +269,9 @@ class LPCCondorCluster(HTCondorCluster):
                 f"Likely failed to bind to local port {self._port}, try rerunning"
             )
 
-        def build_scratch():
-            # Depending on the size of the inputs this may take a long time
-            tmproot = f"/uscmst1b_scratch/lpc1/3DayLifetime/{os.getlogin()}/"
-            self.scratch_area = tempfile.TemporaryDirectory(dir=tmproot)
-            infiles = []
-            if self._ship_env:
-                shutil.copytree(
-                    "/srv/.env", os.path.join(self.scratch_area.name, ".env")
-                )
-                infiles.append(".env")
-            for fn in self._transfer_input_files:
-                fn = os.path.abspath(fn)
-                if any(
-                    os.path.commonprefix([fn, p]) == p for p in self.schedd_safe_paths
-                ):
-                    # no need to copy these
-                    infiles.append(fn)
-                    continue
-                basename = os.path.basename(fn)
-                try:
-                    shutil.copy(fn, self.scratch_area.name)
-                except IsADirectoryError:
-                    shutil.copytree(fn, os.path.join(self.scratch_area.name, basename))
-                infiles.append(basename)
-            return infiles
-
-        prepared_input_files = await self.loop.run_in_executor(None, build_scratch)
+        prepared_input_files = await self.loop.run_in_executor(
+            None, self._build_scratch
+        )
         self._job_kwargs.setdefault("job_extra", {})
         self._job_kwargs["job_extra"]["initialdir"] = self.scratch_area.name
         self._job_kwargs["job_extra"]["transfer_input_files"] = ",".join(
@@ -274,4 +280,4 @@ class LPCCondorCluster(HTCondorCluster):
 
     async def _close(self):
         await super()._close()
-        await self.loop.run_in_executor(None, lambda: self.scratch_area.cleanup())
+        await self.loop.run_in_executor(None, self._clean_scratch)
