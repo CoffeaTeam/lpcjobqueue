@@ -76,4 +76,4 @@ if __name__ == "__main__":
     print(f"Output: {hists}")
     print(f"Metrics: {metrics}")
     print(f"Finished in {elapsed:.1f}s")
-    print(f"Events/s: {metrics['entries'].value / elapsed:.0f}")
+    print(f"Events/s: {metrics['entries'] / elapsed:.0f}")
