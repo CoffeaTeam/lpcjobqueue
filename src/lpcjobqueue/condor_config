@@ -1,7 +1,7 @@
 # This should be the only file on CMS LPC interactive machines
 
 # What should be the remote pool to query for schedds?
-FERMIHTC_REMOTE_POOL = cmssrv268.fnal.gov, cmssrv605.fnal.gov
+FERMIHTC_REMOTE_POOL = cmst1mgr1.fnal.gov, cmssrv605.fnal.gov
 
 # Collector host set to remote pool
 COLLECTOR_HOST = $(FERMIHTC_REMOTE_POOL)
