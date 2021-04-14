@@ -36,7 +36,8 @@ def acquire_schedd():
                 ],
                 constraint='FERMIHTC_DRAIN_LPCSCHEDD=?=FALSE && FERMIHTC_SCHEDD_TYPE=?="CMSLPC"',
             )
-            break
+            if scheddAds:
+                break
         except Exception:
             logger.debug(f"Failed to contact pool node {node}, trying others...")
             pass
