@@ -253,7 +253,7 @@ class LPCCondorCluster(HTCondorCluster):
         self.scratch_area = tempfile.TemporaryDirectory(dir=tmproot)
         infiles = []
         if self._ship_env:
-            shutil.copytree("/srv/.env", os.path.join(self.scratch_area.name, ".env"))
+            shutil.copytree("/srv/.env", os.path.join(self.scratch_area.name, ".env"), symlinks=True)
             infiles.append(".env")
         for fn in self._transfer_input_files:
             fn = os.path.abspath(fn)
