@@ -1,24 +1,26 @@
-import os
-import logging
 import asyncio
-import weakref
+import logging
+import os
 import random
 import shutil
 import socket
 import sys
 import tempfile
-import yaml
+import weakref
+
 import dask
-from distributed.core import Status
+import yaml
 from dask_jobqueue.htcondor import (
     HTCondorCluster,
     HTCondorJob,
     quote_arguments,
     quote_environment,
 )
-from .schedd import htcondor, SCHEDD
+from distributed.core import Status
+
 import lpcjobqueue.patch  # noqa: F401
 
+from .schedd import SCHEDD, SCHEDD_POOL, htcondor
 
 logger = logging.getLogger(__name__)
 fn = os.path.join(os.path.dirname(__file__), "config.yaml")
@@ -80,7 +82,7 @@ class LPCCondorJob(HTCondorJob):
         )
 
     def job_script(self):
-        """ Construct a job submission script """
+        """Construct a job submission script"""
         quoted_arguments = quote_arguments(self._command_template.split(" "))
         quoted_environment = quote_environment(self.env_dict)
         job_header_lines = "\n".join(
@@ -95,7 +97,7 @@ class LPCCondorJob(HTCondorJob):
         }
 
     async def start(self):
-        """ Start workers and point them to our local scheduler """
+        """Start workers and point them to our local scheduler"""
         logger.info("Starting worker: %s", self.name)
 
         if "initialdir" not in self.job_header_dict:
@@ -121,7 +123,7 @@ class LPCCondorJob(HTCondorJob):
                 logger.error(str(ex))
                 return None
 
-        self.job_id = await asyncio.get_event_loop().run_in_executor(None, sub)
+        self.job_id = await asyncio.get_event_loop().run_in_executor(SCHEDD_POOL, sub)
         if self.job_id:
             self.known_jobs.add(self.job_id)
             weakref.finalize(self, self._close_job, self.job_id)
@@ -132,7 +134,7 @@ class LPCCondorJob(HTCondorJob):
             self.status = Status.running
 
     async def close(self):
-        if self.status == Status.closing:
+        if self.status in (Status.closing, Status.closed):
             return await self.finished()
         logger.info(
             f"Closing worker {self.name} job_id {self.job_id} (current status: {self.status})"
@@ -155,7 +157,19 @@ class LPCCondorJob(HTCondorJob):
 
         for _ in range(30):
             await asyncio.sleep(1)
-            if await asyncio.get_event_loop().run_in_executor(None, check_gone):
+            try:
+                is_gone = await asyncio.get_event_loop().run_in_executor(
+                    SCHEDD_POOL, check_gone
+                )
+            except RuntimeError as ex:
+                if str(ex) == "cannot schedule new futures after interpreter shutdown":
+                    logger.info(f"Thread pool lost while checking worker {self.name} job {self.job_id}")
+                    # We're not going to be able to do anything async now
+                    self.status = None
+                    self._event_finished.set()
+                    return
+                raise ex
+            if is_gone:
                 logger.info(f"Gracefully closed worker {self.name} job {self.job_id}")
                 self.known_jobs.discard(self.job_id)
                 self.status = Status.closed
@@ -177,7 +191,7 @@ class LPCCondorJob(HTCondorJob):
                 logger.error(str(ex))
             return False
 
-        result = await asyncio.get_event_loop().run_in_executor(None, stop)
+        result = await asyncio.get_event_loop().run_in_executor(SCHEDD_POOL, stop)
         if result:
             logger.info(f"Forcefully closed job {self.job_id}")
             self.known_jobs.discard(self.job_id)
