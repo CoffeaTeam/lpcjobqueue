@@ -1,7 +1,7 @@
+import concurrent.futures
 import logging
 import os
 import re
-
 
 logger = logging.getLogger(__name__)
 os.environ["CONDOR_CONFIG"] = os.path.join(os.path.dirname(__file__), "condor_config")
@@ -76,3 +76,6 @@ def acquire_schedd():
 # Would prefer one per cluster but there is a quite scary weakref.finalize
 # that depends on it
 SCHEDD = acquire_schedd()
+# The htcondor binding has a global lock so there's no point in using more than
+# one pool for asyncio run_in_executor
+SCHEDD_POOL = concurrent.futures.ThreadPoolExecutor(1)

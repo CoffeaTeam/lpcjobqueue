@@ -1,9 +1,9 @@
 """Patches to be applied to workers
 
 """
-from dask.sizeof import sizeof
-import uproot
 import awkward
+import uproot
+from dask.sizeof import sizeof
 
 
 @sizeof.register(awkward.highlevel.Array)
