@@ -10,7 +10,7 @@ else
   export COFFEA_IMAGE=\$1
 fi
 
-singularity exec -B \${PWD}:/srv -B /uscmst1b_scratch --pwd /srv \\
+singularity exec -B \${PWD}:/srv -B /cvmfs -B /uscmst1b_scratch --pwd /srv \\
   /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
   /bin/bash --rcfile /srv/.bashrc
 EOF
