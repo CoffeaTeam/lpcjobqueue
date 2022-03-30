@@ -7,7 +7,7 @@ from dask.sizeof import sizeof
 
 
 @sizeof.register(awkward.highlevel.Array)
-def sizeof_uproot_generic(obj):
+def sizeof_awkward_generic(obj):
     return obj.nbytes
 
 
