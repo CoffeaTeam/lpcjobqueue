@@ -3,6 +3,7 @@
 """
 import awkward
 import uproot
+import hist
 from dask.sizeof import sizeof
 
 
@@ -14,3 +15,9 @@ def sizeof_awkward_generic(obj):
 @sizeof.register(uproot.model.Model)
 def sizeof_uproot_generic(obj):
     return obj.num_bytes
+
+
+@sizeof.register(hist.hist.Hist)
+def sizeof_hist(obj):
+    # doesn't include axes but that should be relatively small
+    return sizeof(obj.view(flow=True))
