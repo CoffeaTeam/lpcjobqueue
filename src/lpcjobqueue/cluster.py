@@ -39,7 +39,7 @@ def is_venv():
 
 
 class LPCCondorJob(HTCondorJob):
-    executable = "/usr/bin/env"
+    executable = os.path.dirname(os.path.abspath(__file__)) + '/condor_exec.exe'
     container_prefix = "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/"
     config_name = "lpccondor"
     known_jobs = set()
