@@ -81,21 +81,6 @@ class LPCCondorJob(HTCondorJob):
             }
         )
 
-    def job_script(self):
-        """Construct a job submission script"""
-        quoted_arguments = quote_arguments(self._command_template.split(" "))
-        quoted_environment = quote_environment(self.env_dict)
-        job_header_lines = "\n".join(
-            "%s = %s" % (k, v) for k, v in self.job_header_dict.items()
-        )
-        return self._script_template % {
-            "shebang": self.shebang,
-            "job_header": job_header_lines,
-            "quoted_environment": quoted_environment,
-            "quoted_arguments": quoted_arguments,
-            "executable": self.executable,
-        }
-
     async def start(self):
         """Start workers and point them to our local scheduler"""
         logger.info("Starting worker: %s", self.name)
@@ -298,9 +283,9 @@ class LPCCondorCluster(HTCondorCluster):
         prepared_input_files = await self.loop.run_in_executor(
             None, self._build_scratch
         )
-        self._job_kwargs.setdefault("job_extra", {})
-        self._job_kwargs["job_extra"]["initialdir"] = self.scratch_area.name
-        self._job_kwargs["job_extra"]["transfer_input_files"] = ",".join(
+        self._job_kwargs.setdefault("job_extra_directives", {})
+        self._job_kwargs["job_extra_directives"]["initialdir"] = self.scratch_area.name
+        self._job_kwargs["job_extra_directives"]["transfer_input_files"] = ",".join(
             prepared_input_files
         )
 
