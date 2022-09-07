@@ -57,9 +57,9 @@ class LPCCondorJob(HTCondorJob):
         if ship_env:
             base_class_kwargs["python"] = ".env/bin/python"
             base_class_kwargs.setdefault(
-                "extra", list(dask.config.get("jobqueue.%s.extra" % self.config_name))
+                "worker_extra_args", list(dask.config.get("jobqueue.%s.worker_extra_args" % self.config_name))
             )
-            base_class_kwargs["extra"].extend(["--preload", "lpcjobqueue.patch"])
+            base_class_kwargs["worker_extra_args"].extend(["--preload", "lpcjobqueue.patch"])
         else:
             base_class_kwargs["python"] = "python"
         super().__init__(scheduler=scheduler, name=name, **base_class_kwargs)
