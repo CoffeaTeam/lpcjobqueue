@@ -43,7 +43,7 @@ class LPCCondorJob(HTCondorJob):
     container_prefix = "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/"
     config_name = "lpccondor"
     known_jobs = set()
-    env_name = os.path.basename(os.environ['VIRTUAL_ENV'])
+    env_name = os.path.basename(os.getenv('VIRTUAL_ENV', ''))
 
     def __init__(
         self,
@@ -56,7 +56,7 @@ class LPCCondorJob(HTCondorJob):
     ):
         image = self.container_prefix + image
         if ship_env:
-            base_class_kwargs["python"] = f"{env_name}/bin/python"
+            base_class_kwargs["python"] = f"{self.env_name}/bin/python"
             base_class_kwargs.setdefault(
                 "worker_extra_args", list(dask.config.get("jobqueue.%s.worker_extra_args" % self.config_name))
             )
@@ -253,7 +253,7 @@ class LPCCondorCluster(HTCondorCluster):
         self.scratch_area = tempfile.TemporaryDirectory(dir=tmproot)
         infiles = []
         if self._ship_env:
-            env_path = os.environ['VIRTUAL_ENV']
+            env_path = os.getenv('VIRTUAL_ENV', '')
             shutil.copytree(env_path, os.path.join(self.scratch_area.name, os.path.basename(env_path)))
             infiles.append(os.path.basename(env_path))
         for fn in self._transfer_input_files:
