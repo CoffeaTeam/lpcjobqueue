@@ -43,7 +43,7 @@ class LPCCondorJob(HTCondorJob):
     container_prefix = "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/"
     config_name = "lpccondor"
     known_jobs = set()
-    env_name = os.path.basename(os.getenv('VIRTUAL_ENV', ''))
+    env_name = os.path.basename(os.getenv('VIRTUAL_ENV', '.env'))
 
     def __init__(
         self,
@@ -253,7 +253,7 @@ class LPCCondorCluster(HTCondorCluster):
         self.scratch_area = tempfile.TemporaryDirectory(dir=tmproot)
         infiles = []
         if self._ship_env:
-            env_path = os.getenv('VIRTUAL_ENV', '')
+            env_path = os.getenv('VIRTUAL_ENV', '/srv/.env')
             shutil.copytree(env_path, os.path.join(self.scratch_area.name, os.path.basename(env_path)))
             infiles.append(os.path.basename(env_path))
         for fn in self._transfer_input_files:
