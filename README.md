@@ -2,7 +2,7 @@ lpcjobqueue
 ===========
 A dask-jobqueue plugin for the LPC Condor queue designed to work with the `coffea-dask` singularity image.
 
-For users of LXPLUS, a similar implementation is available in https://github.com/cernops/dask-lxplus
+__For users of LXPLUS:__ a similar implementation is available in https://github.com/cernops/dask-lxplus
 
 
 # Installation
