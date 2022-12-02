@@ -78,4 +78,4 @@ be accessible. If the dashboard port is already used on your node, you can overr
 in the `LPCCondorCluster` constructor by specifying `scheduler_options={"dashboard_address": ":12435"}`.
 
 ## LXPLUS Implementation
-You can find a version of this adapter for lxplus developed by CERN IT Ops here: [dask-lxplus](https://github.com/cernops/dask-lxplus).
+You can find a version of this adapter for lxplus developed by CERN IT Ops specific for lxplus here: [dask-lxplus](https://github.com/cernops/dask-lxplus).
