@@ -1,4 +1,4 @@
 #!/bin/bash
 # htcondor jobqueue executable is /bin/sh, so
 # we emulate /bin/sh -c "command" behavior
-$2
+eval $2
