@@ -33,6 +33,8 @@ export JUPYTER_PATH=/srv/.jupyter
 export JUPYTER_RUNTIME_DIR=/srv/.local/share/jupyter/runtime
 export JUPYTER_DATA_DIR=/srv/.local/share/jupyter
 export IPYTHONDIR=/srv/.ipython
+export CONDOR_CONFIG=/srv/.condor_config
+grep -v '^include' /etc/condor/config.d/01_cmslpc_interactive > .condor_config
 
 [[ -d .env ]] || install_env
 source .env/bin/activate

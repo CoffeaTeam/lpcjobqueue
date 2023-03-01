@@ -4,7 +4,6 @@ import os
 import re
 
 logger = logging.getLogger(__name__)
-os.environ["CONDOR_CONFIG"] = os.path.join(os.path.dirname(__file__), "condor_config")
 import htcondor  # noqa: E402
 
 
