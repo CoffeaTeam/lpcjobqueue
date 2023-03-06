@@ -10,6 +10,8 @@ else
   export COFFEA_IMAGE=\$1
 fi
 
+grep -v '^include' /etc/condor/config.d/01_cmslpc_interactive > .condor_config
+
 SINGULARITY_SHELL=\$(which bash) singularity exec -B \${PWD}:/srv -B /cvmfs -B /uscmst1b_scratch --pwd /srv \\
   /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
   /bin/bash --rcfile /srv/.bashrc
@@ -25,7 +27,7 @@ install_env() {
   export TMPDIR=\$(mktemp -d -p .)
   .env/bin/python -m ipykernel install --user
   rm -rf \$TMPDIR && unset TMPDIR
-  .env/bin/python -m pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v0.2.8
+  .env/bin/python -m pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v0.2.9
   echo "done."
 }
 
