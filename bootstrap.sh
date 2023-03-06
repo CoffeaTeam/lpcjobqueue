@@ -41,7 +41,7 @@ unset GREP_OPTIONS
 [[ -d .env ]] || install_env
 source .env/bin/activate
 alias pip="python -m pip"
-pip show lpcjobqueue | grep -q "Version: \${LPCJQ_VERSION}" || pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v\${LPCJQ_VERSION}
+pip show lpcjobqueue 2>/dev/null | grep -q "Version: \${LPCJQ_VERSION}" || pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v\${LPCJQ_VERSION}
 EOF
 
 chmod u+x shell .bashrc
