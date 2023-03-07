@@ -18,6 +18,7 @@ SINGULARITY_SHELL=\$(which bash) singularity exec -B \${PWD}:/srv -B /cvmfs -B /
 EOF
 
 cat <<EOF > .bashrc
+LPCJQ_VERSION="0.2.9"
 install_env() {
   set -e
   echo "Installing shallow virtual environment in \$PWD/.env..."
@@ -27,7 +28,7 @@ install_env() {
   export TMPDIR=\$(mktemp -d -p .)
   .env/bin/python -m ipykernel install --user
   rm -rf \$TMPDIR && unset TMPDIR
-  .env/bin/python -m pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v0.2.9
+  .env/bin/python -m pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v\${LPCJQ_VERSION}
   echo "done."
 }
 
@@ -35,10 +36,12 @@ export JUPYTER_PATH=/srv/.jupyter
 export JUPYTER_RUNTIME_DIR=/srv/.local/share/jupyter/runtime
 export JUPYTER_DATA_DIR=/srv/.local/share/jupyter
 export IPYTHONDIR=/srv/.ipython
+unset GREP_OPTIONS
 
 [[ -d .env ]] || install_env
 source .env/bin/activate
 alias pip="python -m pip"
+pip show lpcjobqueue 2>/dev/null | grep -q "Version: \${LPCJQ_VERSION}" || pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v\${LPCJQ_VERSION}
 EOF
 
 chmod u+x shell .bashrc
