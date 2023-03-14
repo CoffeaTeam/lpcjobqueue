@@ -96,11 +96,11 @@ class LPCCondorJob(HTCondorJob):
         def sub():
             try:
                 classads = []
-                with SCHEDD.transaction() as txn:
+                with SCHEDD().transaction() as txn:
                     cluster_id = job.queue(txn, ad_results=classads)
 
                 logger.debug(f"ClassAds for job {cluster_id}: {classads}")
-                SCHEDD.spool(classads)
+                SCHEDD().spool(classads)
                 return cluster_id
             except htcondor.HTCondorInternalError as ex:
                 logger.error(str(ex))
@@ -136,7 +136,7 @@ class LPCCondorJob(HTCondorJob):
 
         def check_gone():
             try:
-                return len(SCHEDD.query(f"ClusterId == {self.job_id}")) == 0
+                return len(SCHEDD().query(f"ClusterId == {self.job_id}")) == 0
             except htcondor.HTCondorIOError as ex:
                 logger.error(str(ex))
                 return False
@@ -168,7 +168,7 @@ class LPCCondorJob(HTCondorJob):
 
         def stop():
             try:
-                res = SCHEDD.act(
+                res = SCHEDD().act(
                     htcondor.JobAction.Remove, f"ClusterId == {self.job_id}"
                 )
                 if res["TotalSuccess"] == 1 and res["TotalChangedAds"] == 1:
@@ -195,7 +195,7 @@ class LPCCondorJob(HTCondorJob):
                 f"Last-ditch attempt to close HTCondor job {job_id} in finalizer! You should confirm the job exits!"
             )
             try:
-                SCHEDD.act(htcondor.JobAction.Remove, f"ClusterId == {job_id}")
+                SCHEDD().act(htcondor.JobAction.Remove, f"ClusterId == {job_id}")
             except htcondor.HTCondorIOError as ex:
                 logger.error(str(ex))
             cls.known_jobs.discard(job_id)
