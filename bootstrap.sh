@@ -18,7 +18,7 @@ SINGULARITY_SHELL=\$(which bash) singularity exec -B \${PWD}:/srv -B /cvmfs -B /
 EOF
 
 cat <<EOF > .bashrc
-LPCJQ_VERSION="0.2.9"
+LPCJQ_VERSION="0.2.10"
 install_env() {
   set -e
   echo "Installing shallow virtual environment in \$PWD/.env..."
