@@ -14,7 +14,10 @@ bash bootstrap.sh
 ```
 This creates two new files in this directory: `shell` and `.bashrc`. The `./shell`
 executable can then be used to start a singularity shell with a coffea environment.
+
 Optionally, one can choose a specific image using e.g. `./shell coffeateam/coffea-dask:coffea-dask:0.7.1-gd5339d7`.
+You can list all choices of image with `ls /cvmfs/unpacked.cern.ch/registry.hub.docker.com/coffeateam/`.
+
 Note the singularity environment does inherit from your calling environemnt, so
 it should be "clean" (i.e. no cmsenv, LCG release, etc.)
 
