@@ -150,7 +150,7 @@ class LPCCondorJob(HTCondorJob):
                 if str(ex) == "cannot schedule new futures after interpreter shutdown":
                     logger.info(f"Thread pool lost while checking worker {self.name} job {self.job_id}")
                     # We're not going to be able to do anything async now
-                    self.status = None
+                    self.status = Status.undefined
                     self._event_finished.set()
                     return
                 raise ex
@@ -184,7 +184,7 @@ class LPCCondorJob(HTCondorJob):
             self._event_finished.set()
             return
         logger.error(f"Failed to forcefully close job {self.job_id}")
-        self.status = None
+        self.status = Status.undefined
         self._event_finished.set()
 
     @classmethod
