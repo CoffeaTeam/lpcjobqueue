@@ -24,12 +24,11 @@ from .schedd import SCHEDD, SCHEDD_POOL, htcondor
 
 logger = logging.getLogger(__name__)
 fn = os.path.join(os.path.dirname(__file__), "config.yaml")
-dask.config.ensure_file(source=fn)
 
 with open(fn) as f:
     defaults = yaml.safe_load(f)
 
-dask.config.update(dask.config.config, defaults, priority="old")
+dask.config.update(dask.config.config, defaults, priority="new")
 
 
 def is_venv():
