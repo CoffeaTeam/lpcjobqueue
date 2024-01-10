@@ -1,3 +1,6 @@
+distributed:
+ dashboard:
+    link: "/proxy/{port}/status"
 jobqueue:
   lpccondor:
     name: dask-worker
