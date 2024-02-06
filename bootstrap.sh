@@ -20,7 +20,7 @@ APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv --pwd /srv \\
 EOF
 
 cat <<EOF > .bashrc
-LPCJQ_VERSION="0.2.10"
+LPCJQ_VERSION="0.3.0"
 install_env() {
   set -e
   echo "Installing shallow virtual environment in \$PWD/.env..."
