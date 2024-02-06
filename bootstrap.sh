@@ -12,7 +12,9 @@ fi
 
 grep -v '^include' /etc/condor/config.d/01_cmslpc_interactive > .condor_config
 
-APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv -B /cvmfs -B /uscmst1b_scratch --pwd /srv \\
+export APPTAINER_BINDPATH=/uscmst1b_scratch,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security/vomses:/etc/vomses,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security
+
+APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv --pwd /srv \\
   /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
   /bin/bash --rcfile /srv/.bashrc
 EOF
