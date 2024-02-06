@@ -211,7 +211,7 @@ class LPCCondorCluster(HTCondorCluster):
         run workers from that environent. This allows user-installed packages
         to be available on the worker
     image: str
-        Name of the singularity image to use (default: $COFFEA_IMAGE)
+        Name of the apptainer image to use (default: $COFFEA_IMAGE)
     transfer_input_files: str, List[str]
         Files to be shipped along with the job. They will be placed in the
         working directory of the workers, as usual for HTCondor. Any paths

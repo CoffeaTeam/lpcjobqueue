@@ -1,6 +1,6 @@
 lpcjobqueue
 ===========
-A dask-jobqueue plugin for the LPC Condor queue designed to work with the `coffea-dask` singularity image.
+A dask-jobqueue plugin for the LPC Condor queue designed to work with the `coffea-dask` apptainer image.
 
 __For users of LXPLUS:__ a similar implementation is available in https://github.com/cernops/dask-lxplus
 
@@ -13,16 +13,16 @@ curl -OL https://raw.githubusercontent.com/CoffeaTeam/lpcjobqueue/main/bootstrap
 bash bootstrap.sh
 ```
 This creates two new files in this directory: `shell` and `.bashrc`. The `./shell`
-executable can then be used to start a singularity shell with a coffea environment.
+executable can then be used to start an apptainer shell with a coffea environment.
 
 Optionally, one can choose a specific image using e.g. `./shell coffeateam/coffea-dask:coffea-dask:0.7.1-gd5339d7`.
 You can list all choices of image with `ls /cvmfs/unpacked.cern.ch/registry.hub.docker.com/coffeateam/`.
 
-Note the singularity environment does inherit from your calling environemnt, so
+Note the apptainer environment does inherit from your calling environment, so
 it should be "clean" (i.e. no cmsenv, LCG release, etc.)
 
 # Usage
-The singularity shell can spawn dask clusters on the LPC condor farm, using the same image for the workers
+The apptainer shell can spawn dask clusters on the LPC condor farm, using the same image for the workers
 as the shell environment. Be sure your x509 grid proxy certificate is up to date before starting the shell.
 The package assumes your proxy is located in your home directory (as is usual for LPC interactive nodes)
 
@@ -35,7 +35,7 @@ and provides the following additional options:
         run workers from that environent. This allows user-installed packages
         to be available on the worker
     image: str
-        Name of the singularity image to use (default: $COFFEA_IMAGE)
+        Name of the apptainer image to use (default: $COFFEA_IMAGE)
     transfer_input_files: str, List[str]
         Files to be shipped along with the job. They will be placed in the
         working directory of the workers, as usual for HTCondor. Any paths
