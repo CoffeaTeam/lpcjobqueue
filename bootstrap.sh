@@ -5,14 +5,22 @@ cat <<EOF > shell
 
 
 if [ "\$1" == "" ]; then
-  export COFFEA_IMAGE=coffeateam/coffea-dask:latest
+  echo "We no longer have a default image. Please specify a coffea image."
+  echo "Good choices would be:"
+  echo " - coffeateam/coffea-dask-almalinux8:latest (for coffea CalVer)"
+  echo " - coffeateam/coffea-base-almalinux8:latest (for coffea 0.7)"
+  echo "All options can be enumerated by looking at either"
+  echo " https://hub.docker.com/repositories/coffeateam"
+  echo "or"
+  echo " ls /cvmfs/unpacked.cern.ch/registry.hub.docker.com/coffeateam"
+  exit 1
 else
   export COFFEA_IMAGE=\$1
 fi
 
 grep -v '^include' /etc/condor/config.d/01_cmslpc_interactive > .condor_config
 
-export APPTAINER_BINDPATH=/uscmst1b_scratch,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security/vomses:/etc/vomses,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security
+export APPTAINER_BINDPATH=/uscmst1b_scratch,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security
 
 APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv --pwd /srv \\
   /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
