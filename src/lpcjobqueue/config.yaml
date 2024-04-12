@@ -10,11 +10,13 @@ jobqueue:
     memory: 2GB                # Total amount of memory per job
     processes: 1                # Number of Python processes per job
 
+    python: null                # Python executable
     interface: null             # Network interface to use like eth0 or ib0
     death-timeout: 60           # Number of seconds to wait if a worker can not find a scheduler
     local-directory: /srv       # Location of fast local storage like /scratch or $TMPDIR
     shared-temp-directory: null
     extra: null
+    worker-command: "distributed.cli.dask_worker" # Command to launch a worker
     worker-extra-args: ["--worker-port 10000:10070", "--nanny-port 10070:10100", "--no-dashboard"]
 
     # HTCondor Resource Manager options
