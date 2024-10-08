@@ -30,12 +30,7 @@ EOF
 
 cat <<EOF > .cmslpc-local-conf
 #!/bin/bash
-python3 ${LPC_CONDOR_LOCAL}.orig
-EOF
-
-cat <<EOF > .condor_config
-REQUIRE_LOCAL_CONFIG_FILE = false
-include : ${LPC_CONDOR_CONFIG}
+python3 ${LPC_CONDOR_LOCAL}.orig | grep -v "LOCAL_CONFIG_FILE"
 EOF
 
 cat <<EOF > .bashrc
@@ -54,7 +49,7 @@ install_env() {
   set +e
 }
 
-export CONDOR_CONFIG=/srv/.condor_config
+export CONDOR_CONFIG=${LPC_CONDOR_CONFIG}
 export JUPYTER_PATH=/srv/.jupyter
 export JUPYTER_RUNTIME_DIR=/srv/.local/share/jupyter/runtime
 export JUPYTER_DATA_DIR=/srv/.local/share/jupyter
