@@ -18,7 +18,7 @@ else
   export COFFEA_IMAGE=\$1
 fi
 
-export APPTAINER_BINDPATH=/uscmst1b_scratch,/storage,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,/etc/condor/config.d/01_cmslpc_interactive,/usr/local/bin/cmslpc-local-conf.py
+export APPTAINER_BINDPATH=/uscmst1b_scratch,/storage,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,/etc/condor/config.d/01_cmslpc_interactive,/usr/local/bin/cmslpc-local-conf.py,python3:/usr/bin/python3
 
 APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv --pwd /srv \\
   /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
@@ -54,5 +54,10 @@ alias pip="python -m pip"
 pip show lpcjobqueue 2>/dev/null | grep -q "Version: \${LPCJQ_VERSION}" || pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v\${LPCJQ_VERSION}
 EOF
 
-chmod u+x shell .bashrc
+cat <<'EOF' > python3
+#!/usr/bin/env bash
+python3 "$@"
+EOF
+
+chmod u+x shell .bashrc python3
 echo "Wrote shell and .bashrc to current directory. You can delete this file. Run ./shell to start the apptainer shell"
