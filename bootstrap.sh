@@ -41,6 +41,7 @@ install_env() {
   set +e
 }
 
+export CONDOR_CONFIG=/etc/condor/config.d/01_cmslpc_interactive
 export JUPYTER_PATH=/srv/.jupyter
 export JUPYTER_RUNTIME_DIR=/srv/.local/share/jupyter/runtime
 export JUPYTER_DATA_DIR=/srv/.local/share/jupyter
