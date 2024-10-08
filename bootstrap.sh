@@ -20,7 +20,7 @@ else
   export COFFEA_IMAGE=\$1
 fi
 
-export APPTAINER_BINDPATH=/uscmst1b_scratch,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,${LPC_CONDOR_CONFIG},/usr/local/bin/cmslpc-local-conf.py,.python3:/usr/bin/python3
+export APPTAINER_BINDPATH=${APPTAINER_BINDPATH}${APPTAINER_BINDPATH:+,}/uscmst1b_scratch,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,${LPC_CONDOR_CONFIG},/usr/local/bin/cmslpc-local-conf.py,.python3:/usr/bin/python3
 
 APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv --pwd /srv \\
   /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
