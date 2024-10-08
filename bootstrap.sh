@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+LPC_CONDOR_CONFIG=/etc/condor/config.d/01_cmslpc_interactive
+
 cat <<EOF > shell
 #!/usr/bin/env bash
 
@@ -18,11 +20,16 @@ else
   export COFFEA_IMAGE=\$1
 fi
 
-export APPTAINER_BINDPATH=/uscmst1b_scratch,/storage,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,/etc/condor/config.d/01_cmslpc_interactive,/usr/local/bin/cmslpc-local-conf.py,python3:/usr/bin/python3
+export APPTAINER_BINDPATH=/uscmst1b_scratch,/storage,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,${LPC_CONDOR_CONFIG},/usr/local/bin/cmslpc-local-conf.py,python3:/usr/bin/python3
 
 APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv --pwd /srv \\
   /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
   /bin/bash --rcfile /srv/.bashrc
+EOF
+
+cat <<EOF > .condor_config
+REQUIRE_LOCAL_CONFIG_FILE = false
+include : ${LPC_CONDOR_CONFIG}
 EOF
 
 cat <<EOF > .bashrc
@@ -41,7 +48,7 @@ install_env() {
   set +e
 }
 
-export CONDOR_CONFIG=/etc/condor/config.d/01_cmslpc_interactive
+export CONDOR_CONFIG=/srv/.condor_config
 export JUPYTER_PATH=/srv/.jupyter
 export JUPYTER_RUNTIME_DIR=/srv/.local/share/jupyter/runtime
 export JUPYTER_DATA_DIR=/srv/.local/share/jupyter
