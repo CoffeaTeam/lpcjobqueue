@@ -38,6 +38,7 @@ install_env() {
   rm -rf \$TMPDIR && unset TMPDIR
   .env/bin/python -m pip install -q git+https://github.com/CoffeaTeam/lpcjobqueue.git@v\${LPCJQ_VERSION}
   echo "done."
+  set +e
 }
 
 export JUPYTER_PATH=/srv/.jupyter
