@@ -18,8 +18,6 @@ else
   export COFFEA_IMAGE=\$1
 fi
 
-grep -v '^include' /etc/condor/config.d/01_cmslpc_interactive > .condor_config
-
 export APPTAINER_BINDPATH=/uscmst1b_scratch,/storage,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,/etc/condor/config.d/01_cmslpc_interactive,/usr/local/bin/cmslpc-local-conf.py
 
 APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv --pwd /srv \\
