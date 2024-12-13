@@ -5,10 +5,12 @@ import os
 import re
 
 logger = logging.getLogger(__name__)
-os.environ["CONDOR_CONFIG"] = os.path.join("/srv/.condor_config")
-if not os.path.isfile(os.environ['CONDOR_CONFIG']):
-    logger.warn(f"Condor configuration not found! run the following command outside the apptainer instance")
-    logger.warn(f"grep -v '^include' /etc/condor/config.d/01_cmslpc_interactive > .condor_config")
+if "CONDOR_CONFIG" not in os.environ or not os.path.isfile(os.environ["CONDOR_CONFIG"]):
+    raise RuntimeError(
+        f"Condor configuration {os.environ.get('CONDOR_CONFIG', '')} not found!\n"
+        "Please download and run bootstrap.sh again to update the shell with:\n"
+        "curl -OL https://raw.githubusercontent.com/CoffeaTeam/lpcjobqueue/main/bootstrap.sh; bash bootstrap.sh"
+    )
 import htcondor  # noqa: E402
 
 
