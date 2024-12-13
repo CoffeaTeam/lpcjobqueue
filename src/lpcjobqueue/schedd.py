@@ -5,8 +5,8 @@ import os
 import re
 
 logger = logging.getLogger(__name__)
-if not os.path.isfile(os.environ['CONDOR_CONFIG']):
-    logger.warn(f"Condor configuration {os.environ['CONDOR_CONFIG']} not found! rerun bootstrap.sh to update shell")
+if 'CONDOR_CONFIG' not in os.environ or not os.path.isfile(os.environ['CONDOR_CONFIG']):
+    logger.warn(f"Condor configuration {os.environ.get('CONDOR_CONFIG', '')} not found! Rerun bootstrap.sh to update shell")
 import htcondor  # noqa: E402
 
 
