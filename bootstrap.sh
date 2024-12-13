@@ -34,7 +34,7 @@ python3 ${LPC_CONDOR_LOCAL}.orig | grep -v "LOCAL_CONFIG_FILE"
 EOF
 
 cat <<EOF > .bashrc
-LPCJQ_VERSION="0.3.1"
+LPCJQ_VERSION="0.4.0"
 install_env() {
   set -e
   echo "Installing shallow virtual environment in \$PWD/.env..."
