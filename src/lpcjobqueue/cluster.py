@@ -53,8 +53,6 @@ class LPCCondorJob(HTCondorJob):
         image,
         **base_class_kwargs,
     ):
-        image = self.container_prefix + image
-        image = os.path.realpath(image)
         if ship_env:
             base_class_kwargs["python"] = f"{self.env_name}/bin/python"
             base_class_kwargs.setdefault(
@@ -202,7 +200,7 @@ class LPCCondorCluster(HTCondorCluster):
         run workers from that environent. This allows user-installed packages
         to be available on the worker
     image: str
-        Name of the apptainer image to use (default: $COFFEA_IMAGE)
+        Name of the apptainer image to use (default: $COFFEA_IMAGE_FULL)
     transfer_input_files: str, List[str]
         Files to be shipped along with the job. They will be placed in the
         working directory of the workers, as usual for HTCondor. Any paths
@@ -225,9 +223,13 @@ class LPCCondorCluster(HTCondorCluster):
         kwargs.setdefault("scheduler_options", {})
         kwargs["scheduler_options"].setdefault("host", f"{hostname}:{self._port}")
         kwargs.setdefault("ship_env", False)
-        kwargs.setdefault(
-            "image", os.environ.get("COFFEA_IMAGE", "coffeateam/coffea-dask:latest")
-        )
+        try:
+            if "image" not in kwargs:
+                kwargs["image"] = os.environ["COFFEA_IMAGE_FULL"]
+        except KeyError:
+            raise RuntimeError("$COFFEA_IMAGE_FULL environment not set. Please re-run bootstrap to update your enviornment")
+        if not os.path.exists(kwargs["image"]):
+            raise RuntimeError(f"{kwargs['image']} does not exist. Please specify a full path to an apptainer image")
         self._ship_env = kwargs["ship_env"]
         infiles = kwargs.pop("transfer_input_files", [])
         if not isinstance(infiles, list):
