@@ -19,13 +19,13 @@ if [ "\$1" == "" ]; then
   exit 1
 else
   export COFFEA_IMAGE=\$1
+  export COFFEA_IMAGE_FULL=\$(realpath /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE})
 fi
 
 export APPTAINER_BINDPATH=${APPTAINER_BINDPATH}${APPTAINER_BINDPATH:+,}/uscmst1b_scratch,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,${LPC_CONDOR_CONFIG},${LPC_CONDOR_LOCAL}:${LPC_CONDOR_LOCAL}.orig,.cmslpc-local-conf:${LPC_CONDOR_LOCAL}
 
 APPTAINER_SHELL=\$(which bash) apptainer exec -B \${PWD}:/srv --pwd /srv \\
-  /cvmfs/unpacked.cern.ch/registry.hub.docker.com/\${COFFEA_IMAGE} \\
-  /bin/bash --rcfile /srv/.bashrc
+  \$COFFEA_IMAGE_FULL /bin/bash --rcfile /srv/.bashrc
 EOF
 
 cat <<EOF > .cmslpc-local-conf
