@@ -40,7 +40,7 @@ def acquire_schedd():
                     "RecentDaemonCoreDutyCycle",
                     "TotalIdleJobs",
                 ],
-                constraint='FERMIHTC_DRAIN_LPCSCHEDD=?=FALSE && FERMIHTC_SCHEDD_TYPE=?="CMSLPC"',
+                constraint='FERMIHTC_DRAIN_LPCSCHEDD=?=FALSE && FERMIHTC_SCHEDD_TYPE=?="CMSLPC" && MaxJobsRunning!=0',
             )
             if scheddAds:
                 break
