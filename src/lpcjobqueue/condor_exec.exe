@@ -1,4 +1,6 @@
 #!/bin/bash
+# Make sure libraries find the conda install, see issue #40 for details
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 # htcondor jobqueue executable is /bin/sh, so
 # we emulate /bin/sh -c "command" behavior
 eval $2
