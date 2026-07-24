@@ -11,7 +11,30 @@ if "CONDOR_CONFIG" not in os.environ or not os.path.isfile(os.environ["CONDOR_CO
         "Please download and run bootstrap.sh again to update the shell with:\n"
         "curl -OL https://raw.githubusercontent.com/CoffeaTeam/lpcjobqueue/main/bootstrap.sh; bash bootstrap.sh"
     )
-import htcondor  # noqa: E402
+try:
+    import htcondor2 as htcondor  # noqa: E402
+except ImportError:  # HTCondor < 25 only ships the version 1 bindings
+    import htcondor  # noqa: E402
+
+_V2 = htcondor.__name__ == "htcondor2"
+
+# HTCondor 25 dropped the version 1 bindings (HTCONDOR-3240) along with every
+# HTCondorException subclass, so alias the one we catch to the surviving base class.
+if not hasattr(htcondor, "HTCondorIOError"):
+    htcondor.HTCondorIOError = htcondor.HTCondorException
+
+
+def spool(schedd, submit, result):
+    """Spool the input files for a submission made with ``spool=True``
+
+    The binding versions disagree on the argument: version 1 wants the job ads from
+    ``Submit.jobs()``, which version 2 does not implement, while version 2 wants the
+    ``SubmitResult`` itself.
+    """
+    if _V2:
+        schedd.spool(result)
+    else:
+        schedd.spool(list(submit.jobs(clusterid=result.cluster())))
 
 
 def acquire_schedd():
