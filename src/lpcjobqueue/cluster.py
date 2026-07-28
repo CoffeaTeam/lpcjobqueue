@@ -20,7 +20,7 @@ from distributed.core import Status
 
 import lpcjobqueue.patch  # noqa: F401
 
-from .schedd import SCHEDD, SCHEDD_POOL, htcondor
+from .schedd import SCHEDD, SCHEDD_POOL, htcondor, spool
 
 logger = logging.getLogger(__name__)
 fn = os.path.join(os.path.dirname(__file__), "config.yaml")
@@ -93,9 +93,8 @@ class LPCCondorJob(HTCondorJob):
 
         def sub():
             result = SCHEDD().submit(job, spool=True)
-            cluster_id = result.cluster()
-            SCHEDD().spool(list(job.jobs(clusterid=cluster_id)))
-            return cluster_id
+            spool(SCHEDD(), job, result)
+            return result.cluster()
 
         self.job_id = await asyncio.get_event_loop().run_in_executor(SCHEDD_POOL, sub)
         if self.job_id:
